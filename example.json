@@ -1,0 +1,80 @@
+    {
+        "_id": "c-05",
+        "_parentId": "b-05",
+        "_type": "component",
+        "_component": "textinput",
+        "_classes": "",
+        "_layout": "full",
+        "title": "Title of our component",
+        "displayTitle": "Title of our component",
+        "body": "Upload your file below. It will then display the data in a table for you to preview and edit prior to submission.",
+        "instruction": "Upload your file, then press submit when happy the data is displayed correctly.",
+        "ariaQuestion": "Question text specifically for screen readers.",
+        "_attempts": 1,
+        "_shouldDisplayAttempts": false,
+        "_isRandom": false,
+        "_questionWeight": 1,
+        "_canShowModelAnswer": true,
+        "_canShowFeedback": true,
+        "_canShowMarking": true,
+        "_recordInteraction": true,
+        "_allowsAnyCase": true,
+        "_allowsPunctuation": true,
+        "modelAnswer": "/path/to/modelAnswer.csv",
+        "schema": "/path/to/schema.json",
+        "maxScore": 10,
+        "passScore": 4,
+        "chatTemplate": "This is the user answer:\n\n{{userAnswer}}. Give the user some constrcutive feedback on their answer.",
+        "aiAPIKey": "api-key",
+        "_feedback": {
+            "title": "Feedback",
+            "altTitle": "Alt feedback title text",
+            "correct": "This feedback will appear if you answered the question correctly.",
+            "_incorrect": {
+                "notFinal": "",
+                "final": "This feedback will appear if you answered the question incorrectly."
+            },
+            "_bands": [
+                {
+                    "_score": 4,
+                    "feedback": "Only just passed."
+                },
+                {
+                    "_score": 6,
+                    "feedback": "Good effort."
+                },
+                {
+                    "_score": 8,
+                    "feedback": "Great work."
+                }
+            ]
+        },
+        "_comment": "You only need to include _buttons if you want to override the button labels that are set in course.json",
+        "_buttons": {
+            "_submit": {
+                "buttonText": "Submit",
+                "ariaLabel": "Select here to submit your answer."
+            },
+            "_reset": {
+                "buttonText": "Reset",
+                "ariaLabel": ""
+            },
+            "_showCorrectAnswer": {
+                "buttonText": "Correct Answer",
+                "ariaLabel": ""
+            },
+            "_hideCorrectAnswer": {
+                "buttonText": "My Answer",
+                "ariaLabel": ""
+            },
+            "_showFeedback": {
+                "buttonText": "Show feedback",
+                "ariaLabel": ""
+            },
+            "remainingAttemptsText": "attempts remaining",
+            "remainingAttemptText": "final attempt"
+        },
+        "_pageLevelProgress": {
+            "_isEnabled": true
+        }
+    }
