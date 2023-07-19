@@ -1,6 +1,6 @@
 {
   "name": "adapt-odi-csvGrader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "framework": ">=5.30.1",
   "homepage": "https://github.com/theodi/adapt-odi-csvGrader",
   "bugs": "https://github.com/theodi/adapt-odi-csvGrader/issues",

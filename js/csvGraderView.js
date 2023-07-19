@@ -65,7 +65,6 @@ class csvGraderView extends QuestionView {
     const table = this.$(`#${tableId}`)[0];
     this.model.set('table', table);
     if (this.model.get('userAnswer') && this.model.get('_isSubmitted')) {
-      console.log('Got restore');
       csvData = this.model.get('userAnswer');
     }
 

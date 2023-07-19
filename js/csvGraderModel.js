@@ -44,7 +44,9 @@ class csvGraderModel extends QuestionModel {
   }
 
   reset(type = 'hard', canReset = this.get('_canReset')) {
-    super.reset(type, canReset);
+    const wasReset = super.reset(type, canReset);
+    if (!wasReset) return false;
+
     this.set('_score', undefined);
     this.set('score', undefined);
     this.set('userFeedback', undefined);
@@ -52,6 +54,16 @@ class csvGraderModel extends QuestionModel {
     this.set('_shouldShowMarking', false);
     this.set('_canShowMarking', false);
     this.set('_userFeedbackRendered', false);
+    try {
+      if (Adapt.spoor) {
+        if (Adapt.spoor.config._isEnabled) {
+          this.setCookie('_userAnswer', '');
+          this.setCookie('_userFeedback', '');
+        }
+      }
+    } catch (error) {}
+
+    return true;
   }
 
   canSubmit() {
@@ -168,6 +180,15 @@ class csvGraderModel extends QuestionModel {
     const csvData = this.readUserAnswerAsCSV();
     this.set('_userAnswer', csvData);
     this.set('userAnswer', csvData);
+    try {
+      if (Adapt.spoor) {
+        if (Adapt.spoor.config._isEnabled) {
+          this.set('userAnswer', csvData);
+          this.set('_userAnswer', false);
+          this.setCookie('_userAnswer', csvData);
+        }
+      }
+    } catch (error) {}
     if (this.userAnswerValidates()) {
       this.set('score', this.get('maxScore'));
       this.set('_score', this.get('maxScore'));
@@ -190,15 +211,6 @@ class csvGraderModel extends QuestionModel {
     const conversation = this.get('conversation');
     let question = this.get('chatTemplate');
     question = question.replace('{{userAnswer}}', '\n\n' + csvData + '\n\n');
-    try {
-      if (Adapt.spoor) {
-        if (Adapt.spoor.config._isEnabled) {
-          this.set('userAnswer', csvData);
-          this.set('_userAnswer', false);
-          this.setCookie('_userAnswer', csvData);
-        }
-      }
-    } catch (error) {}
     conversation.push({ role: 'user', content: question });
     this.set('conversation', conversation);
     this.chatWithGPT(800);
@@ -231,11 +243,11 @@ class csvGraderModel extends QuestionModel {
       if (Adapt.spoor) {
         if (Adapt.spoor.config._isEnabled) {
           this.set('_userAnswer', this.isCorrect());
-          const data = JSON.parse(this.getCookie('csvGrader-' + this.get('_id')));
-          if (data._userAnswer) { this.set('userAnswer', data._userAnswer); }
-          if (data._userFeedback) { this.set('_userFeedback', data._userFeeback); }
+          const cookieAnswer = JSON.parse(this.getCookie('csvGrader-' + this.get('_id') + '_userAnswer'));
+          const cookieFeedback = this.getCookie('csvGrader-' + this.get('_id') + '_userFeedback');
+          if (cookieAnswer) { this.set('userAnswer', cookieAnswer); }
+          if (cookieFeedback) { this.set('_userFeedback', cookieFeedback); }
           this.set('score', this.get('_score'));
-          this.set('_userFeedback', data._userFeedback);
         }
       }
     } catch (err) {
@@ -277,7 +289,7 @@ class csvGraderModel extends QuestionModel {
     // Append the inner div to the auto div
     tutorAutoDiv.appendChild(tutorAutoInnerDiv);
 
-    tutorAutoInnerDiv.innerHTML = 'Waiting for auto tutor response';
+    tutorAutoInnerDiv.innerHTML = 'Waiting for AI assistant response';
     tutorElement.appendChild(tutorAutoDiv);
     if (!this.get('_score')) {
       const button = document.querySelector('.notify__close-btn');
@@ -579,10 +591,10 @@ class csvGraderModel extends QuestionModel {
 
   setCookie(key, value) {
     const id = this.get('_id');
-    let object = JSON.parse(this.getCookie('csvGrader-' + id)) || {};
-    object[key] = value;
-    object = JSON.stringify(object);
-    document.cookie = 'csvGrader-' + id + '=' + encodeURIComponent(object) + '; expires=Fri, 31 Dec 2032 23:59:59 GMT; path=/';
+    if (key === '_userAnswer') {
+      value = JSON.stringify(value);
+    }
+    document.cookie = 'csvGrader-' + id + key + '=' + encodeURIComponent(value) + '; expires=Fri, 31 Dec 2032 23:59:59 GMT; path=/';
   }
 
   getCookie(name) {
