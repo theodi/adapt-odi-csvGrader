@@ -54,15 +54,15 @@ class csvGraderModel extends QuestionModel {
     this.set('_shouldShowMarking', false);
     this.set('_canShowMarking', false);
     this.set('_userFeedbackRendered', false);
+    /*
     try {
       if (Adapt.spoor) {
         if (Adapt.spoor.config._isEnabled) {
-          this.setCookie('_userAnswer', '');
-          this.setCookie('_userFeedback', '');
+          this.setSCORMCookie('_interaction', '');
         }
       }
     } catch (error) {}
-
+    */
     return true;
   }
 
@@ -175,7 +175,7 @@ class csvGraderModel extends QuestionModel {
   setScore() {
   }
 
-  markQuestion() {
+  async markQuestion() {
     this.set('_canShowFeedback', true);
     const csvData = this.readUserAnswerAsCSV();
     this.set('_userAnswer', csvData);
@@ -185,7 +185,6 @@ class csvGraderModel extends QuestionModel {
         if (Adapt.spoor.config._isEnabled) {
           this.set('userAnswer', csvData);
           this.set('_userAnswer', false);
-          this.setCookie('_userAnswer', csvData);
         }
       }
     } catch (error) {}
@@ -206,6 +205,7 @@ class csvGraderModel extends QuestionModel {
       this.set('_shouldShowMarking', true);
       this.set('_canShowMarking', true);
       this.set('_userFeedbackRendered', true);
+      await this.storeSCORMResponse();
       return true;
     }
     const conversation = this.get('conversation');
@@ -243,11 +243,19 @@ class csvGraderModel extends QuestionModel {
       if (Adapt.spoor) {
         if (Adapt.spoor.config._isEnabled) {
           this.set('_userAnswer', this.isCorrect());
-          const cookieAnswer = JSON.parse(this.getCookie('csvGrader-' + this.get('_id') + '_userAnswer'));
-          const cookieFeedback = this.getCookie('csvGrader-' + this.get('_id') + '_userFeedback');
-          if (cookieAnswer) { this.set('userAnswer', cookieAnswer); }
-          if (cookieFeedback) { this.set('_userFeedback', cookieFeedback); }
           this.set('score', this.get('_score'));
+          if (this.get('dataStore')) {
+            const dataStore = this.get('dataStore');
+            fetch(dataStore + '/' + this.getSCORMCookie('_interaction'))
+              .then(response => {
+                return response.json();
+              })
+              .then(data => {
+                if (data._userAnswer) { this.set('userAnswer', JSON.parse(data._userAnswer)); }
+                Adapt.trigger('csvGrader:renderTable');
+                if (data._userFeedback) { this.set('_userFeedback', data._userFeedback); }
+              });
+          }
         }
       }
     } catch (err) {
@@ -324,20 +332,8 @@ class csvGraderModel extends QuestionModel {
   }
 
   checkUserFeedback() {
-    let userFeedback = this.get('_userFeedback');
+    const userFeedback = this.get('_userFeedback');
     if (userFeedback) {
-      const paragraphs = userFeedback.split('\n').map(function(line) {
-        return '<p>' + line + '</p>';
-      });
-      userFeedback = paragraphs.join('');
-      this.set('_userFeedback', userFeedback);
-      try {
-        if (Adapt.spoor) {
-          if (Adapt.spoor.config._isEnabled) {
-            this.setCookie('_userFeedback', userFeedback);
-          }
-        }
-      } catch (err) {}
       if (this.get('_userFeedbackRendered')) {
         this.renderFeedback();
       } else {
@@ -349,33 +345,51 @@ class csvGraderModel extends QuestionModel {
   }
 
   renderFeedback() {
+    let userFeedback = this.get('_userFeedback');
+    const paragraphs = userFeedback.split('\n').map(function(line) {
+      return '<p>' + line + '</p>';
+    });
+    userFeedback = paragraphs.join('');
     const tutorAutoInnerDiv = document.querySelector('.tutor__auto-inner');
     // tutorAutoInnerDiv.innerHTML = "Auto-tutor response<br/><br/>";
-    tutorAutoInnerDiv.innerHTML = this.get('_userFeedback');
+    tutorAutoInnerDiv.innerHTML = userFeedback;
     const marking = '<p>Score: ' + this.get('score') + '/' + this.get('maxScore') + '</p>';
     tutorAutoInnerDiv.innerHTML += marking;
     Adapt.trigger('notify:resize');
   }
 
+  stripHtmlTags(inputString) {
+    const regex = /<[^>]+>/g;
+    return inputString.replace(regex, '');
+  }
+
   populateUserFeedback() {
     this.set('_canShowFeedback', true);
     this.set('_userFeedbackRendered', true);
+    this.storeSCORMResponse();
 
     const tutorAutoInnerDiv = document.querySelector('.tutor__auto-inner');
     tutorAutoInnerDiv.innerHTML = '';
-    let currentIndex = 0;
+    let currentLineIndex = 0;
+    let currentWordIndex = 0;
+    let pElement = document.createElement('p');
+    tutorAutoInnerDiv.appendChild(pElement);
 
     const self = this;
-
+    const lines = this.stripHtmlTags(this.get('_userFeedback')).split('\n');
     const appendWord = () => {
-      const words = self.get('_userFeedback').split(' ');
-      const totalWords = words.length;
-      if (currentIndex < totalWords) {
-        const word = words[currentIndex];
-        let currentString = tutorAutoInnerDiv.innerHTML;
-        currentString += ' ' + word;
-        tutorAutoInnerDiv.innerHTML = currentString;
-        currentIndex++;
+      if (currentLineIndex < lines.length) {
+        const currentLine = lines[currentLineIndex];
+        const words = currentLine.split(' ');
+        if (currentWordIndex < words.length) {
+          pElement.appendChild(document.createTextNode(' ' + words[currentWordIndex]));
+          currentWordIndex++;
+        } else {
+          currentLineIndex++;
+          currentWordIndex = 0;
+          pElement = document.createElement('p');
+          tutorAutoInnerDiv.appendChild(pElement);
+        }
         Adapt.trigger('notify:resize');
         // Add a delay between words (adjust the duration as needed)
         setTimeout(appendWord, 50);
@@ -576,10 +590,7 @@ class csvGraderModel extends QuestionModel {
   }
 
   getResponse() {
-    const object = {};
-    object._userAnswer = this.get('userAnswer');
-    object._userFeedback = this.get('_userFeedback');
-    return JSON.stringify(object);
+    return this.get('_interactionID') || 'No ID';
   }
 
   /**
@@ -589,20 +600,57 @@ class csvGraderModel extends QuestionModel {
     return 'fill-in';
   }
 
-  setCookie(key, value) {
-    const id = this.get('_id');
-    if (key === '_userAnswer') {
-      value = JSON.stringify(value);
+  // Send the object to the backend dataStore and call a function to show the returned ID and store it in a cookie
+  storeSCORMResponse() {
+    try {
+      if (Adapt.spoor) {
+        if (!Adapt.spoor.config._isEnabled) {
+          return;
+        }
+      }
+    } catch (err) {
+      return;
     }
-    document.cookie = 'csvGrader-' + id + key + '=' + encodeURIComponent(value) + '; expires=Fri, 31 Dec 2032 23:59:59 GMT; path=/';
+
+    if (!this.get('dataStore')) {
+      return;
+    }
+    // Can only call this once we have the feedback, not before.
+    const object = {};
+
+    object._userAnswer = JSON.stringify(this.get('userAnswer')); // Not the userScore;
+    object._userFeedback = this.get('_userFeedback');
+    object._component = this.get('_component');
+    const dataStore = this.get('dataStore');
+    fetch(dataStore, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(object)
+    })
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        this.set('_interactionID', data.id);
+        this.setSCORMCookie('_interaction', data.id);
+      });
   }
 
-  getCookie(name) {
+  setSCORMCookie(key, value) {
+    const id = this.get('_id');
+    document.cookie = this.get('_component') + '-' + id + key + '=' + value + '; expires=Fri, 31 Dec 2032 23:59:59 GMT; path=/';
+  }
+
+  getSCORMCookie(key) {
+    const id = this.get('_id');
+    const name = this.get('_component') + '-' + id + key;
     const cookies = document.cookie.split('; ');
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].split('=');
       if (cookie[0] === name) {
-        return decodeURIComponent(cookie[1]);
+        return cookie[1];
       }
     }
     return null;

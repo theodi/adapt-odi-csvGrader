@@ -26,6 +26,7 @@
         "passScore": 4,
         "chatTemplate": "This is the user answer:\n\n{{userAnswer}}. Give the user some constrcutive feedback on their answer.",
         "aiAPIKey": "api-key",
+        "dataStore": "http://example.org/interactions",
         "_feedback": {
             "title": "Feedback",
             "altTitle": "Alt feedback title text",

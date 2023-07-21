@@ -103,6 +103,16 @@
       "help": "The API Key for use with chatGPT",
       "translatable": true
     },
+    "dataStore": {
+      "title": "Data Store URL",
+      "type": "string",
+      "required": false,
+      "default": "",
+      "inputType": "Text",
+      "validators": [],
+      "help": "The URL of the dataStore to use if deploying in SCORM and you want to store/restore user responses and feedback.",
+      "translatable": true
+    },
     "_attempts": {
       "type": "number",
       "required": true,

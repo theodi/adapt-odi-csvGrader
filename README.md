@@ -86,9 +86,7 @@ guide the learner’s interaction with the component.
 
 Ensure you proposed use will fall within ChatGPTs rate limits. The component displays a timer which will increase in time if rate limits are exceeded. 
 
-SCORM is not deisnged for this use case. Although cmi.interactions can store the raw answer, it cannot be restored unless full support for SCORM 2004 is present (currently this plugin does not support this however)
-
-cmi.interactions will also be where you can find the feedback from the AI assistant. The student response will be a JSON object containing the user answer ("\_userAnswer") and the feedback from the AI assistant ("\_userFeedback").
+SCORM is not deisnged for this use case. Although cmi.interactions can store the raw answer, it is limited to 255 charecters so completely useless. Since v0.2.0 this plugin has been updated to make use of a simple database backend that you will need to provide an API for. You then define the dataStore URL in the config and the plugin makes a POST and GET call to store and retrieve the _userAnswer and _userFeedback (also posted is _component as the name of the component). The succesul result of this post should be the UID for that object which is then stored in cmi.interactions and also in a cookie. Without the ability to read cmi.interactions in SCORM 1.2, the cookie is the only way to retrieve the UID and fetch the data back from the database. Future versions of the plugin will allow restoration of the answer via setting of the ID. 
 
 In XAPI these are stored in the approprate variables of the same name.
 
