@@ -15,8 +15,7 @@ class csvGraderModel extends QuestionModel {
       }
     } catch (err) { console.log(err); }
     return QuestionModel.resultExtend('trackable', [
-      '_userFeedback',
-      '_userFeedbackRating'
+      '_userFeedback'
     ]);
   }
 
@@ -106,6 +105,7 @@ class csvGraderModel extends QuestionModel {
     }
   }
 
+  // Specific
   readUserAnswerAsCSV() {
     const table = this.get('table');
     // Get all table rows
@@ -121,6 +121,7 @@ class csvGraderModel extends QuestionModel {
     return csvContent;
   }
 
+  // Specific
   readUserAnswerAsJSON() {
     const table = this.get('table');
     const placeholderText = 'click to edit';
@@ -175,6 +176,7 @@ class csvGraderModel extends QuestionModel {
   setScore() {
   }
 
+  // Specific
   async markQuestion() {
     this.set('_canShowFeedback', true);
     const csvData = this.readUserAnswerAsCSV();
@@ -216,6 +218,7 @@ class csvGraderModel extends QuestionModel {
     this.chatWithGPT(800);
   }
 
+  // Specific
   userAnswerValidates() {
     const ajv = new Ajv(); // Create a new instance of Ajv
     const schema = this.get('schemaData');
@@ -232,6 +235,7 @@ class csvGraderModel extends QuestionModel {
     }
   }
 
+  // Specific - But could do with something to split this into generic and then call the trigger after super
   restoreUserAnswers() {
     if (!this.get('_isSubmitted')) return;
 
@@ -246,7 +250,9 @@ class csvGraderModel extends QuestionModel {
           this.set('score', this.get('_score'));
           if (this.get('dataStore')) {
             const dataStore = this.get('dataStore');
-            fetch(dataStore + '/' + this.getSCORMCookie('_interaction'))
+            const componentId = this.get('_id');
+            const studentId = Adapt.spoor.scorm.scorm.get('cmi.core.student_id');
+            fetch(dataStore + '?componentId=' + componentId + '&studentId=' + studentId)
               .then(response => {
                 return response.json();
               })
@@ -351,7 +357,6 @@ class csvGraderModel extends QuestionModel {
     });
     userFeedback = paragraphs.join('');
     const tutorAutoInnerDiv = document.querySelector('.tutor__auto-inner');
-    // tutorAutoInnerDiv.innerHTML = "Auto-tutor response<br/><br/>";
     tutorAutoInnerDiv.innerHTML = userFeedback;
     const marking = '<p>Score: ' + this.get('score') + '/' + this.get('maxScore') + '</p>';
     tutorAutoInnerDiv.innerHTML += marking;
@@ -404,6 +409,7 @@ class csvGraderModel extends QuestionModel {
     appendWord();
   }
 
+  // SPECIFIC, COULD BE MADE GENERIC WITH VARIABLES
   createAIConversation() {
     let conversation = [
       { role: 'system', content: this.get('systemAI') }
@@ -442,6 +448,7 @@ class csvGraderModel extends QuestionModel {
     }
   }
 
+  // SPECIFIC - Again could be made generic
   chatWithGPT(tokens) {
     const apiKey = this.get('aiAPIKey');
     let conversation = this.get('conversation');
@@ -563,8 +570,6 @@ class csvGraderModel extends QuestionModel {
     return this.get('maxScore');
   }
 
-  /* END GENERIC */
-
   /**
   * used by adapt-contrib-spoor to get the user's answers in the format required by the cmi.interactions.n.student_response data field
   * returns the user's answers as a string in the format 'answer1[,]answer2[,]answer3'
@@ -615,12 +620,19 @@ class csvGraderModel extends QuestionModel {
     if (!this.get('dataStore')) {
       return;
     }
+    const studentId = Adapt.spoor.scorm.scorm.get('cmi.core.student_id');
+    if (!studentId) {
+      return;
+    }
+
     // Can only call this once we have the feedback, not before.
     const object = {};
-
+    // You can get the studentID
+    object.studentId = studentId;
+    object._component = this.get('_component');
+    object._componentId = this.get('_id');
     object._userAnswer = JSON.stringify(this.get('userAnswer')); // Not the userScore;
     object._userFeedback = this.get('_userFeedback');
-    object._component = this.get('_component');
     const dataStore = this.get('dataStore');
     fetch(dataStore, {
       method: 'POST',
@@ -634,7 +646,7 @@ class csvGraderModel extends QuestionModel {
       })
       .then(data => {
         this.set('_interactionID', data.id);
-        this.setSCORMCookie('_interaction', data.id);
+        // this.setSCORMCookie('_interaction', data.id);
       });
   }
 
