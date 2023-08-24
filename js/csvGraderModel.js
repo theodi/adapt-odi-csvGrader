@@ -53,15 +53,6 @@ class csvGraderModel extends QuestionModel {
     this.set('_shouldShowMarking', false);
     this.set('_canShowMarking', false);
     this.set('_userFeedbackRendered', false);
-    /*
-    try {
-      if (Adapt.spoor) {
-        if (Adapt.spoor.config._isEnabled) {
-          this.setSCORMCookie('_interaction', '');
-        }
-      }
-    } catch (error) {}
-    */
     return true;
   }
 
@@ -605,7 +596,7 @@ class csvGraderModel extends QuestionModel {
     return 'fill-in';
   }
 
-  // Send the object to the backend dataStore and call a function to show the returned ID and store it in a cookie
+  // Send the object to the backend dataStore
   storeSCORMResponse() {
     try {
       if (Adapt.spoor) {
@@ -627,7 +618,7 @@ class csvGraderModel extends QuestionModel {
 
     // Can only call this once we have the feedback, not before.
     const object = {};
-    // You can get the studentID
+    // Get the studentID
     object.studentId = studentId;
     object._component = this.get('_component');
     object._componentId = this.get('_id');
@@ -646,26 +637,7 @@ class csvGraderModel extends QuestionModel {
       })
       .then(data => {
         this.set('_interactionID', data.id);
-        // this.setSCORMCookie('_interaction', data.id);
       });
-  }
-
-  setSCORMCookie(key, value) {
-    const id = this.get('_id');
-    document.cookie = this.get('_component') + '-' + id + key + '=' + value + '; expires=Fri, 31 Dec 2032 23:59:59 GMT; path=/';
-  }
-
-  getSCORMCookie(key) {
-    const id = this.get('_id');
-    const name = this.get('_component') + '-' + id + key;
-    const cookies = document.cookie.split('; ');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].split('=');
-      if (cookie[0] === name) {
-        return cookie[1];
-      }
-    }
-    return null;
   }
 
   /* Timers for AI Content */
