@@ -181,6 +181,19 @@ class csvGraderModel extends QuestionModel {
         }
       }
     } catch (error) {}
+    if (this.get('_tutorMark') && this.get('_tutorFeedback')) {
+      this.set('score', this.get('_tutorMark'));
+      this.set('_score', this.get('_tutorMark'));
+      this.isCorrect();
+      this.set('_userFeedback', this.get('_tutorFeedback'));
+      this.set('_tutorMark', null);
+      this.set('_tutorFeedback', null);
+      this.set('_shouldShowMarking', true);
+      this.set('_canShowMarking', true);
+      this.set('_userFeedbackRendered', true);
+      await this.storeSCORMResponse();
+      return true;
+    }
     if (this.userAnswerValidates()) {
       this.set('score', this.get('maxScore'));
       this.set('_score', this.get('maxScore'));
@@ -624,6 +637,7 @@ class csvGraderModel extends QuestionModel {
     object._componentId = this.get('_id');
     object._userAnswer = JSON.stringify(this.get('userAnswer')); // Not the userScore;
     object._userFeedback = this.get('_userFeedback');
+    object._userScore = this.get('score');
     const dataStore = this.get('dataStore');
     fetch(dataStore, {
       method: 'POST',

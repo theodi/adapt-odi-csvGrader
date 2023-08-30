@@ -11,7 +11,8 @@ export default function TextInput (props) {
     body,
     instruction,
     ariaQuestion,
-    uploadFile
+    uploadFile,
+    downloadFile
   } = props;
 
   return (
@@ -42,10 +43,15 @@ export default function TextInput (props) {
         <input
           type="file"
           className="csvGrader-button btn-text btn__action js-btn-action"
-          id="userAnswer"
+          id={`${_id}-userAnswerUpload`}
           accept=".csv"
           onChange={uploadFile}
         />
+        <button
+          className="csvGrader-button btn-text btn__action js-btn-action is-disabled"
+          id={`${_id}-userAnswerDownload`}
+          onClick={downloadFile}
+        >Download submission</button>
       </div>
       <div className="btn__container" />
     </div>

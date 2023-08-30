@@ -103,6 +103,16 @@
       "help": "The API Key for use with chatGPT",
       "translatable": true
     },
+    "tutorPassword": {
+      "title": "Tutor override password",
+      "type": "string",
+      "required": false,
+      "default": "",
+      "inputType": "Text",
+      "validators": [],
+      "help": "The password that is required to access the tutor override feature that allows submission of a new attempt with a specific mark and feedback. Note this is not stored securely and should be considered semi-public! It is just there as a deterant.",
+      "translatable": false
+    },
     "dataStore": {
       "title": "Data Store URL",
       "type": "string",
