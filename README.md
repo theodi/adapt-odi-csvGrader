@@ -49,6 +49,10 @@ guide the learner’s interaction with the component.
 
 **aiAPIKey** (string): Your API key for use with the AI assistant.
 
+**tutorPassword** (string): The password that is required to access the tutor override feature that allows submission of a new attempt with a specific mark and feedback. Note this is not stored securely and should be considered semi-public! It is just there as a deterant. For more see section below.
+
+**dataStore** (string): The URL of the dataStore to use if deploying in SCORM and you want to store/restore user responses and feedback.
+
 **\_attempts** (integer): This specifies the number of times a learner is allowed to submit an answer. The default is `1`.
 
 **\_shouldDisplayAttempts** (boolean): Determines whether or not the text set in **remainingAttemptText** and **remainingAttemptsText** will be displayed. These two attributes are part of the [core buttons](https://github.com/adaptlearning/adapt_framework/wiki/Core-Buttons) attribute group. The default is `false`.
@@ -75,24 +79,43 @@ guide the learner’s interaction with the component.
 
 >**feedback** (string): If no stored feedback is accessible, this text will be displayed to the learner when the learner's score falls within this band's range. 
 
+### Overriding the AI mark and feedback
+This component has been designed with a machanism to allow the manual overriding of feedback and mark provided by the AI. In order for this to work a tutor must be able to "login" as the student in order to see their submission. In typical LMS platforms, e.g. moodle, it is possible to login as the student. Once logged in then you launch the SCORM object containing this plugin in order to see what the student has submitted and view the current feedback and mark. Overriding feedback can be done in a number of ways depending on what your platform supports and how you have configured the SCORM object and this plugin. 
+
+The only way to override the feedback and/or mark is to retry the assessment that this plugin is linked to. This ensures that SCORM handles a new attempt!
+
+To do this you can:
+1.  Reset all the attempts in your LMS for that user and start again
+2.  Allow unlimited attempts and start a new attempt from your LMS
+3.  Permit unlimited reties of the assessment in adapt, even when a pass mark is given
+
+Before this happens you need to first access the existing attempt you want to override and ensure you have a copy of the submission (there is a download submission button) as well as the feedback and mark.
+
+Then chose your method from the 3 above which your deployment supports. 
+
+Once you are ready to make the new attempt:
+1.  Access the learning object containing this plugin as the learner
+2.  On your keyboard press or "CTRL" + "%" (or CTRL+SHIFT+5 on EU kayboard layouts which is where % is) to access the tutor override feature
+3.  Enter the password you have configued in the plugin config
+4.  Write the new feedback and mark in the boxes (if using method 3 above you can do this before you reset the assessment and the existing mark and feedback will be there to update)
+5.  Press submit to close the tutor override screen and save the feedback and mark into a cache
+6.  Upload the datafile which is the submission
+7.  Press submit on the component to trigger the marking, this will read the cache and store the attempt with the tutor supplied feedback.
+
 ### Accessibility
-**Text Input** has been assigned a label using the [aria-label](https://github.com/adaptlearning/adapt_framework/wiki/Aria-Labels) attribute: **ariaRegion**. This label is not a visible element. It is utilized by assistive technology such as screen readers. Should the region's text need to be customised, it can be found within the **globals** object in [*properties.schema*](https://github.com/adaptlearning/adapt-contrib-textInput/blob/master/properties.schema).
+**CSV Grader** has been assigned a label using the [aria-label](https://github.com/adaptlearning/adapt_framework/wiki/Aria-Labels) attribute: **ariaRegion**. This label is not a visible element. It is utilized by assistive technology such as screen readers. Should the region's text need to be customised, it can be found within the **globals** object in [*properties.schema*](https://github.com/adaptlearning/adapt-contrib-textInput/blob/master/properties.schema).
 <div float align=right><a href="#top">Back to Top</a></div>
 
-**Note to developers:**
-**Text Input AI** varies significantly from other Adapt *question components*. Although there is a model answer, marking cannot be repeated, so the result has to be stored. Additionally, the feedback is unique to every press of the submit button, so this also has to be stored. If your brain is programmed to think like SCORM and how restore answers is traditionally done, then this component is not for you. It works with SCORM 1.2 and there are fall backs integrated into the component, but these are not ideal, but they are functional (including the use of cookies to store what cannot be retrieved from SCORM). Also note that cmi.interactions (student response) is a JSON object consisting of the answer and feedback, not just the answer.
+### Limitations
+**CSV Grader** varies significantly from other Adapt *question components*. Although there is a model answer, marking cannot be repeated, so the result has to be stored. Additionally, the feedback is unique to every press of the submit button, so this also has to be stored. If your brain is programmed to think like SCORM and how restore answers is traditionally done, then this component is not for you. It works with SCORM 1.2 and there are fall backs integrated into the component, but these are not ideal, but they are functional.
 
-## Limitations
-
-Ensure you proposed use will fall within ChatGPTs rate limits. The component displays a timer which will increase in time if rate limits are exceeded. 
-
-SCORM is not deisnged for this use case. Although cmi.interactions can store the raw answer, it is limited to 255 charecters so completely useless. Since v0.3.0 this plugin has been updated to make use of a simple database backend that you will need to provide an API for. You then define the dataStore URL in the config and the plugin makes a POST and GET call to store and retrieve the _userAnswer and _userFeedback (also posted is _component name, _componentId and studentId from SCORM). The succesul result of this post should be the UID for that object. Without the ability to read cmi.interactions in SCORM 1.2, the use of a third party store is the only way to retrieve the userAnswer and feedback. Currently the datastore is bespoke, however in the future we will look to enable the use of an XAPI endpoint. 
+SCORM is not deisnged for this use case. Although cmi.interactions can store the raw answer, it is limited to 255 charecters so completely useless. Since v0.3.0 this plugin has been updated to make use of a simple database backend that you will need to provide an API for. You then define the dataStore URL in the config and the plugin makes a POST and GET call to store and retrieve the _userAnswer and _userFeedback (also posted is _component name, _componentId, studentId and score from SCORM). The succesul result of this post should be the UID for that object which is then stored in the student_response. Without the ability to read cmi.interactions in SCORM 1.2, the use of a third party store is the only way to retrieve the userAnswer and feedback. Currently the datastore is bespoke, however in the future we will look to enable the use of an XAPI endpoint. 
 
 In XAPI these are stored in the approprate variables of the same name.
 
 ## Disclaimer
 
-Currently the plug-in does not have a mechanism for people to appeal the grading and comments the AI assistant gives. The publishers of the plugin are not respoinsible for how the AI assistant responds and it is highly recommended that a thorough evaluation be carried out on the use of this component prior to deployment. This should be done for every single reuse. Later versions of the plugin will include "report and rate this feedback" functionality. Alternatively you could include instructions in the "\_feedback" section. This plugin is not recommended for use in situations where it's grading is part of a qualification that is used to make decisions about a persons future, e.g. certified courses.
+Currently the plug-in does not have a mechanism for people to appeal the grading and comments the AI assistant gives. The publishers of the plugin are not respoinsible for how the AI assistant responds and it is highly recommended that a thorough evaluation be carried out on the use of this component prior to deployment. This should be done for every single reuse. Later versions of the plugin will include "report and rate this feedback" functionality. Alternatively you could include instructions in the "\_feedback" section. This plugin is MUST NOT be used in situations where the grading is part of a qualification that is used to make decisions about a persons future, e.g. certified courses.
 
 ----------------------------
 **Author / maintainer:** The Open Data Institute
