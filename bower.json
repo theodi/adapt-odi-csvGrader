@@ -1,13 +1,13 @@
 {
   "name": "adapt-odi-csvGrader",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "framework": ">=5.30.1",
   "homepage": "https://github.com/theodi/adapt-odi-csvGrader",
   "bugs": "https://github.com/theodi/adapt-odi-csvGrader/issues",
   "component": "csvGrader",
   "targetAttribute": "_csvGrader",
   "displayName": "CSV Grader (AI enabled)",
-  "description": "A question component that allows the learner to upload a CSV file. This is then graded by AI based upon a model answer and schema you give.",
+  "description": "A question component that allows the learner to upload a CSV file. This is then graded by AI based upon a model answer and optional schema you give.",
   "main": "/js/adapt-odi-csvGrader.js",
   "keywords": [
     "adapt-plugin",

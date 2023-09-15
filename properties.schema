@@ -59,7 +59,7 @@
     },
     "schema" : {
         "type" : "string",
-        "required" : true,
+        "required" : false,
         "default" : "",
         "title" : "Schema",
         "inputType" : "Asset:other",

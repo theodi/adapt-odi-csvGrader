@@ -224,6 +224,9 @@ class csvGraderModel extends QuestionModel {
 
   // Specific
   userAnswerValidates() {
+    if (!this.get('schemaData')) {
+      return false;
+    }
     const ajv = new Ajv(); // Create a new instance of Ajv
     const schema = this.get('schemaData');
     schema.$schema = 'http://json-schema.org/schema#';
