@@ -485,7 +485,6 @@ class csvGraderModel extends QuestionModel {
     return;
     */
     // Actual code here
-
     fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -508,6 +507,15 @@ class csvGraderModel extends QuestionModel {
           setTimeout(function() {
             self.chatWithGPT(tokens);
           }, 20000);
+        } else if (response.status >= 400 && response.status < 500) {
+          return response.json().then(errorData => {
+            let alertMsg = 'The AI assisstant encountered the following error:\n\n' + errorData.error.code + '\n\n' + errorData.error.message;
+            if (errorData.error.code === 'context_length_exceeded') {
+              alertMsg += '\n\n' + 'Perhaps you submitted an answer that was too long and contains redundant data eg. totals?';
+            }
+            alertMsg += '\n\n' + 'You can press escape to stop the marking and update your submission. You can also report this issue to training@theodi.org.';
+            alert(alertMsg);
+          });
         } else {
           return response.json();
         }
